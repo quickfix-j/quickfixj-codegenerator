@@ -229,20 +229,23 @@ public class MessageCodeGenerator {
     private Transformer createTransformer(Task task, String xsltFile)
             throws TransformerFactoryConfigurationError, TransformerConfigurationException {
         final String cacheKey;
-        final StreamSource styleSource;
-        File xslt = new File(task.getTransformDirectory() + "/" + xsltFile);
+        final File xslt = new File(task.getTransformDirectory() + "/" + xsltFile);
         if (xslt.exists()) {
             cacheKey = xslt.getAbsolutePath();
-            styleSource = new StreamSource(xslt);
         } else {
-            logInfo("Loading predefined xslt file:" + xsltFile);
             cacheKey = "classpath:" + xsltFile;
-            styleSource = new StreamSource(this.getClass().getResourceAsStream(xsltFile));
         }
 
         try {
             Templates templates = templatesCache.computeIfAbsent(cacheKey, k -> {
                 try {
+                    StreamSource styleSource;
+                    if (xslt.exists()) {
+                        styleSource = new StreamSource(xslt);
+                    } else {
+                        logInfo("Loading predefined xslt file:" + xsltFile);
+                        styleSource = new StreamSource(this.getClass().getResourceAsStream(xsltFile));
+                    }
                     return transformerFactory.newTemplates(styleSource);
                 } catch (TransformerConfigurationException e) {
                     throw new CodeGenerationException(e);

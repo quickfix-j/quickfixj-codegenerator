@@ -41,10 +41,8 @@ public class GoldenFileTest {
     private File schemaDirectory = new File("./src/main/resources/org/quickfixj/codegenerator");
     private File goldenBase = new File("./src/test/resources/golden");
 
-    private File fix42DictFile = new File(
-            "../quickfixj-messages/quickfixj-messages-fix42/src/main/resources/FIX42.xml");
-    private File fix44DictFile = new File(
-            "../quickfixj-messages/quickfixj-messages-fix44/src/main/resources/FIX44.xml");
+    private File fix42DictFile = new File("./src/test/resources/dictionaries/FIX42.xml");
+    private File fix44DictFile = new File("./src/test/resources/dictionaries/FIX44.xml");
 
     private MessageCodeGenerator generator;
 

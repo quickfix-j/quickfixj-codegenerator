@@ -8,8 +8,8 @@ unintended changes to generated code.
 
 ```
 golden/
-  fix42/   – output generated from quickfixj-messages-fix42/src/main/resources/FIX42.xml
-  fix44/   – output generated from quickfixj-messages-fix44/src/main/resources/FIX44.xml
+  fix42/   – output generated from src/test/resources/dictionaries/FIX42.xml
+  fix44/   – output generated from src/test/resources/dictionaries/FIX44.xml
 ```
 
 ## What the test does
@@ -31,7 +31,7 @@ with the corresponding file here.  Missing or extra files also fail the test.
    # FIX42
    java -cp "target/quickfixj-codegenerator-*-SNAPSHOT.jar:$(./mvnw -q dependency:build-classpath -DincludeScope=compile -Dmdep.outputFile=/dev/stdout)" \
         org.quickfixj.codegenerator.MessageCodeGenerator \
-        --spec ../quickfixj-messages/quickfixj-messages-fix42/src/main/resources/FIX42.xml \
+        --spec src/test/resources/dictionaries/FIX42.xml \
         --transform src/main/resources/org/quickfixj/codegenerator \
         --out src/test/resources/golden/fix42 \
         --messagePackage quickfix.fix42 --fieldPackage quickfix.field \

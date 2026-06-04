@@ -3,7 +3,7 @@
 
 	<groupId>org.quickfixj</groupId>
 	<artifactId>quickfixj-codegenerator</artifactId>
-	<version>3.0.2</version>
+	<version>3.0.3-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>QuickFIX/J Code Generator Maven Plugin</name>

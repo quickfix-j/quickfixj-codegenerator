@@ -60,9 +60,28 @@ Or run the plugin goal directly:
 mvn quickfixj-codegenerator:generate
 ```
 
+## Documentation
+
+For detailed usage instructions, configuration options, and examples, please refer to the comprehensive documentation:
+
+- **[Message Code Generation Guide](https://quickfix-j.github.io/quickfixj-pages/docs/codegen)** - Complete guide covering:
+  - Maven and Gradle project setup examples
+  - Detailed configuration properties
+  - Advanced customization with MessageCodeGenerator
+  - Custom field and message definitions
+  - XSLT template customization
+
+- **[Customizing QuickFIX/J](https://github.com/quickfix-j/quickfixj/blob/master/customising-quickfixj.md)** - Advanced topics including:
+  - BigDecimal usage for FIX decimal types
+  - Managing incompatible data types across FIX versions
+  - Custom Rules of Engagement
+  - FIX Orchestra integration
+
+- **[QuickFIX/J Messages Module](https://github.com/quickfix-j/quickfixj/blob/master/quickfixj-messages/readme.md)** - Build organization and custom build recommendations
+
 ## Configuration
 
-Detailed configuration options can be specified in the `<configuration>` section of the plugin declaration. Refer to the plugin documentation for available parameters.
+Detailed configuration options can be specified in the `<configuration>` section of the plugin declaration. See the [Message Code Generation Guide](https://quickfix-j.github.io/quickfixj-pages/docs/codegen) for a complete list of available parameters and examples.
 
 ## Version Information
 

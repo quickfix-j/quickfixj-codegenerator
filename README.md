@@ -81,7 +81,3 @@ This project is licensed under [The QuickFIX Software License, Version 1.0](http
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues or pull requests on GitHub.
-
-## Developer
-
-- **Christoph John** ([@chrjohn](https://github.com/chrjohn))

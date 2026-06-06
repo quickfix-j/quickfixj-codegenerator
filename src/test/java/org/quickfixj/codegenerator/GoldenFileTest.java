@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -57,7 +58,7 @@ public class GoldenFileTest {
     @Test
     public void testFix42GenerationMatchesGolden() throws Exception {
         File outputDir = new File(tempFolder, "fix42");
-        outputDir.mkdir();
+        Assertions.assertTrue(outputDir.mkdir());
         generateCode(fix42DictFile, "FIX42", "quickfix.fix42", outputDir);
         assertMatchesGolden(new File(goldenBase, "fix42"), outputDir, "FIX42");
     }
@@ -69,7 +70,7 @@ public class GoldenFileTest {
     @Test
     public void testFix44GenerationMatchesGolden() throws Exception {
         File outputDir = new File(tempFolder, "fix44");
-        outputDir.mkdir();
+        Assertions.assertTrue(outputDir.mkdir());
         generateCode(fix44DictFile, "FIX44", "quickfix.fix44", outputDir);
         assertMatchesGolden(new File(goldenBase, "fix44"), outputDir, "FIX44");
     }

@@ -1,6 +1,6 @@
 package org.quickfixj.codegenerator;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.util.Scanner;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.apache.commons.io.FileUtils;
 
 public class OverwriteTest  {
@@ -23,7 +23,7 @@ public class OverwriteTest  {
     private boolean decimal = true;
     private MessageCodeGenerator generator;
 
-    @Before
+    @BeforeEach
     public void setup() throws IOException {
         if (outputDirectory.exists()){
             FileUtils.cleanDirectory(outputDirectory); 

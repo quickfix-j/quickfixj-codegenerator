@@ -53,7 +53,7 @@
 		<maven-libs-version>3.9.12</maven-libs-version>
 		<maven-plugin-api-version>3.9.14</maven-plugin-api-version>
 		<maven-plugin-annotations.version>3.15.2</maven-plugin-annotations.version>
-		<junit.jupiter.version>5.14.3</junit.jupiter.version>
+		<junit.jupiter.version>6.1.2</junit.jupiter.version>
 		<commons-io.version>2.21.0</commons-io.version>
 		<maven-surefire-plugin-version>3.5.5</maven-surefire-plugin-version>
 		<maven-compiler-plugin-version>3.15.0</maven-compiler-plugin-version>

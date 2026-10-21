@@ -1,7 +1,7 @@
 package org.quickfixj.codegenerator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Golden-file regression test for the code generator.
@@ -35,8 +35,8 @@ import org.junit.rules.TemporaryFolder;
  */
 public class GoldenFileTest {
 
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    @TempDir
+    File tempFolder;
 
     private File schemaDirectory = new File("./src/main/resources/org/quickfixj/codegenerator");
     private File goldenBase = new File("./src/test/resources/golden");
@@ -46,7 +46,7 @@ public class GoldenFileTest {
 
     private MessageCodeGenerator generator;
 
-    @Before
+    @BeforeEach
     public void setup() {
         generator = new MessageCodeGenerator();
     }
@@ -57,7 +57,8 @@ public class GoldenFileTest {
 
     @Test
     public void testFix42GenerationMatchesGolden() throws Exception {
-        File outputDir = tempFolder.newFolder("fix42");
+        File outputDir = new File(tempFolder, "fix42");
+        Assertions.assertTrue(outputDir.mkdir());
         generateCode(fix42DictFile, "FIX42", "quickfix.fix42", outputDir);
         assertMatchesGolden(new File(goldenBase, "fix42"), outputDir, "FIX42");
     }
@@ -68,7 +69,8 @@ public class GoldenFileTest {
 
     @Test
     public void testFix44GenerationMatchesGolden() throws Exception {
-        File outputDir = tempFolder.newFolder("fix44");
+        File outputDir = new File(tempFolder, "fix44");
+        Assertions.assertTrue(outputDir.mkdir());
         generateCode(fix44DictFile, "FIX44", "quickfix.fix44", outputDir);
         assertMatchesGolden(new File(goldenBase, "fix44"), outputDir, "FIX44");
     }

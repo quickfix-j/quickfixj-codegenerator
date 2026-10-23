@@ -94,6 +94,13 @@ public class GenerateMojo extends AbstractMojo {
     private boolean overwrite = true;
 
     /**
+     * Skips code generation, e.g. when the generated sources are known to be up to date.
+     * The output directory is still added as a compile source root.
+     */
+    @Parameter(property = "quickfixj.codegenerator.skip", defaultValue = "false")
+    private boolean skip;
+
+    /**
      * The Maven project to act upon.
      */
     @Parameter(defaultValue = "${project}", required = true)
@@ -110,6 +117,14 @@ public class GenerateMojo extends AbstractMojo {
      * @see org.apache.maven.plugin.AbstractMojo#execute()
      */
     public void execute() throws MojoExecutionException {
+
+        if (skip) {
+            log("Skipping code generation for " + dictFile);
+            if (project != null) {
+                project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
+            }
+            return;
+        }
 
         if (!outputDirectory.exists()) {
             FileUtils.mkdir(outputDirectory.getAbsolutePath());
@@ -337,5 +352,19 @@ public class GenerateMojo extends AbstractMojo {
      */
     public void setOverwrite(boolean overwrite) {
         this.overwrite = overwrite;
+    }
+
+    /**
+     * @return whether code generation is skipped
+     */
+    public boolean isSkip() {
+        return skip;
+    }
+
+    /**
+     * @param skip sets whether code generation is skipped
+     */
+    public void setSkip(boolean skip) {
+        this.skip = skip;
     }
 }

@@ -168,11 +168,11 @@
 					<artifactId>nexus-staging-maven-plugin</artifactId>
 					<version>${nexus-staging-maven-plugin-version}</version>
 					<extensions>true</extensions>
-					<configuration>
-						<serverId>ossrh</serverId>
-						<nexusUrl>https://oss.sonatype.org/service/local/staging/deploy/maven2/</nexusUrl>
-						<autoReleaseAfterClose>true</autoReleaseAfterClose>
-					</configuration>
+				        <configuration>
+                                                <serverId>ossrh</serverId>
+                                                <nexusUrl>https://ossrh-staging-api.central.sonatype.com</nexusUrl>
+                                                <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                                        </configuration>
 				</plugin>
 			</plugins>
 		</pluginManagement>

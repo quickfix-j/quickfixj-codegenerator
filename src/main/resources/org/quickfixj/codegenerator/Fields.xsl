@@ -54,10 +54,10 @@
  * Contact ask@quickfixengine.org if any conditions of this licensing
  * are not clear to you.
  ******************************************************************************/
-<xsl:apply-templates/>
+<xsl:apply-templates select="fields/field[@name=$fieldName]"/>
 </xsl:template>
 
-<xsl:template match="fix/fields/field[@name=$fieldName]">
+<xsl:template match="fix/fields/field">
 package <xsl:value-of select="$fieldPackage"/>;
 
 import quickfix.<xsl:call-template name="get-field-type"/>Field;

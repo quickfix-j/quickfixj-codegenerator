@@ -20,6 +20,7 @@
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
  <xsl:output method="text" encoding="UTF-8"/>
+ <xsl:key name="components-by-name" match="/fix/components/component" use="@name"/>
  <xsl:param name="fieldPackage"/>
  <xsl:param name="messagePackage"/>
 
@@ -106,7 +107,7 @@ public class MessageFactory implements quickfix.MessageFactory {
 <xsl:template mode="group-factories" match="component">
 	<xsl:param name="fullPath"/>
 	<xsl:variable name="name" select="@name"/>
-	<xsl:apply-templates mode="group-factories" select="/fix/components/component[@name=$name]/group">
+	<xsl:apply-templates mode="group-factories" select="key('components-by-name', $name)/group">
 		<xsl:with-param name="fullPath" select='$fullPath'/>
 	</xsl:apply-templates>
 </xsl:template>

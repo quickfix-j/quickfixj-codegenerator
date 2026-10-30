@@ -20,6 +20,9 @@
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
  <xsl:output method="text" encoding="UTF-8" />
+ <xsl:key name="fields-by-name" match="/fix/fields/field" use="@name"/>
+ <xsl:key name="components-by-name" match="/fix/components/component" use="@name"/>
+ <xsl:key name="all-components-by-name" match="component" use="@name"/>
  <xsl:param name="orderedFields"/>
  <xsl:param name="itemName"/>
  <xsl:param name="baseClass">Message</xsl:param>
@@ -132,7 +135,7 @@ import quickfix.Group;</xsl:when>
         <xsl:variable name="exgroup">
           <xsl:for-each select="component">
             <xsl:variable name="myname" select="@name"/>
-            <xsl:for-each select="//component[@name=$myname]">
+            <xsl:for-each select="key('all-components-by-name', $myname)">
               <xsl:call-template name="extra-imports-component"/>
             </xsl:for-each>
           </xsl:for-each>
@@ -150,7 +153,7 @@ import quickfix.Group;</xsl:if>
       <xsl:otherwise>
         <xsl:for-each select="component">
           <xsl:variable name="myname" select="@name"/>
-          <xsl:for-each select="//component[@name=$myname]">
+          <xsl:for-each select="key('all-components-by-name', $myname)">
             <xsl:call-template name="extra-imports-component"/>
           </xsl:for-each>
         </xsl:for-each>
@@ -175,7 +178,7 @@ import quickfix.Group;</xsl:if>
 		private static final int[] ORDER = {<xsl:apply-templates select="field|component|group" mode="group-field-numbers"/>0};
 
 		public <xsl:value-of select="@name"/>() {
-			super(<xsl:value-of select="/fix/fields/field[@name=$groupFieldName]/@number"/>, <xsl:apply-templates select="field|component|group" mode="group-delimeter"/>, ORDER);
+			super(<xsl:value-of select="key('fields-by-name', $groupFieldName)/@number"/>, <xsl:apply-templates select="field|component|group" mode="group-delimeter"/>, ORDER);
 		}
 		<xsl:apply-templates select="field|component|group" mode="field-accessors"/>
 	}
@@ -186,21 +189,21 @@ import quickfix.Group;</xsl:if>
 <xsl:template mode="group-delimeter" match="field">
 	<xsl:if test="position() = 1">
 		<xsl:variable name="name" select="@name"/>
-		<xsl:value-of select="/fix/fields/field[@name=$name]/@number"/>
+		<xsl:value-of select="key('fields-by-name', $name)/@number"/>
 	</xsl:if>
 </xsl:template>
 
 <xsl:template mode="group-delimeter" match="group">
     <xsl:if test="position() = 1">
         <xsl:variable name="name" select="@name"/>
-        <xsl:value-of select="/fix/fields/field[@name=$name]/@number"/>
+        <xsl:value-of select="key('fields-by-name', $name)/@number"/>
     </xsl:if>
 </xsl:template>
 
 <xsl:template mode="group-delimeter" match="component">
 	<xsl:if test="position() = 1">
 		<xsl:variable name="name" select="@name"/>
-		<xsl:apply-templates select="/fix/components/component[@name=$name]/*[name(.)='field' or name(.)='group' or name(.)='component']"
+		<xsl:apply-templates select="key('components-by-name', $name)/*[name(.)='field' or name(.)='group' or name(.)='component']"
 			mode="group-delimeter"/>
 	</xsl:if>
 </xsl:template>
@@ -209,15 +212,15 @@ import quickfix.Group;</xsl:if>
 
 <xsl:template mode="component-field-numbers" match="field">
 	<xsl:variable name="name" select="@name"/>
-	<xsl:value-of select="/fix/fields/field[@name=$name]/@number"/>, </xsl:template>
+	<xsl:value-of select="key('fields-by-name', $name)/@number"/>, </xsl:template>
 
 <xsl:template mode="component-field-numbers" match="group">
 	<xsl:variable name="name" select="@name"/>
-	<xsl:value-of select="/fix/fields/field[@name=$name]/@number"/>, </xsl:template>
+	<xsl:value-of select="key('fields-by-name', $name)/@number"/>, </xsl:template>
 
 <xsl:template mode="component-field-numbers" match="component">
 	<xsl:variable name="name" select="@name"/>
-	<xsl:apply-templates select="/fix/components/component[@name=$name]/*"
+	<xsl:apply-templates select="key('components-by-name', $name)/*"
 		mode="component-field-numbers"/>
 </xsl:template>
 
@@ -227,11 +230,11 @@ import quickfix.Group;</xsl:if>
 
 <xsl:template mode="group-field-numbers" match="field|group">
     <xsl:variable name="name" select="@name"/>
-    <xsl:value-of select="/fix/fields/field[@name=$name]/@number"/>, </xsl:template>
+    <xsl:value-of select="key('fields-by-name', $name)/@number"/>, </xsl:template>
 
 <xsl:template mode="group-field-numbers" match="component">
     <xsl:variable name="name" select="@name"/>
-    <xsl:apply-templates select="/fix/components/component[@name=$name]/*"
+    <xsl:apply-templates select="key('components-by-name', $name)/*"
       mode="group-field-numbers"/>
 </xsl:template>
 
@@ -265,7 +268,7 @@ import quickfix.Group;</xsl:if>
 	}
 
 	public boolean isSet<xsl:value-of select="@name"/>() {
-		return isSetField(<xsl:value-of select="/fix/fields/field[@name=$name]/@number"/>);
+		return isSetField(<xsl:value-of select="key('fields-by-name', $name)/@number"/>);
 	}
 </xsl:template>
 
@@ -288,7 +291,7 @@ import quickfix.Group;</xsl:if>
 <xsl:template mode="field-accessors" match="component">
 	<xsl:call-template name="component-accessor-template"/>
 	<xsl:variable name="name" select="@name"/>
-	<xsl:apply-templates select="/fix/components/component[@name=$name]/*[name(.)='field' or name(.)='group' or name(.)='component']"
+	<xsl:apply-templates select="key('components-by-name', $name)/*[name(.)='field' or name(.)='group' or name(.)='component']"
 		mode="field-accessors"/>
 </xsl:template>
 </xsl:stylesheet>

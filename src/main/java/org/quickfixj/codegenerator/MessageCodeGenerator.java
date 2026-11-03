@@ -19,6 +19,9 @@
 
 package org.quickfixj.codegenerator;
 
+import net.sf.saxon.TransformerFactoryImpl;
+import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.trans.XPathException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -27,10 +30,10 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -120,7 +123,7 @@ public class MessageCodeGenerator {
         }
         parameters.put("messagePackage", task.getMessagePackage());
         parameters.put("fieldPackage", task.getFieldPackage());
-        Document document = getSpecification(task);
+        NodeInfo document = getSpecificationTree(task);
         generateCodeFile(task, document, parameters, task.getOutputBaseDirectory() + "/"
                 + task.getMessageDirectory() + "/" + className + ".java", createTransformer(task,
                 className + ".xsl"));
@@ -132,36 +135,38 @@ public class MessageCodeGenerator {
                 + "/";
         logInfo(task.getName() + ": generating field classes in " + outputDirectory);
         writePackageDocumentation(outputDirectory, "FIX field definitions for " + task.getName());
-        Document document = getSpecification(task);
-        List<String> fieldNames = getNames(document.getDocumentElement(), "fields/field");
+        List<String> fieldNames = getNames(getSpecification(task).getDocumentElement(), "fields/field");
         try {
+            NodeInfo document = getSpecificationTree(task);
             Transformer transformer = createTransformer(task, "Fields.xsl");
+            // parameters which are the same for all fields are only set once
+            Map<String, String> parameters = new HashMap<>();
+            parameters.put("fieldPackage", task.getFieldPackage());
+            String utcTimestampPrecision = task.getUtcTimestampPrecision();
+            if (utcTimestampPrecision != null) {
+                String utcTimestampPrecisionParameterName = "utcTimestampPrecision";
+                if (!UTC_TIMESTAMP_PRECISION_ALLOWED_VALUES.contains(utcTimestampPrecision)) {
+                    throw new CodeGenerationException(new IllegalArgumentException(String.format(
+                        "Allowed values for parameter %s are %s. Supplied value: \"%s\".",
+                        utcTimestampPrecisionParameterName,
+                        String.join(", ", UTC_TIMESTAMP_PRECISION_ALLOWED_VALUES),
+                        utcTimestampPrecision
+                    )));
+                }
+                parameters.put(utcTimestampPrecisionParameterName, utcTimestampPrecision);
+            }
+            if (task.isDecimalGenerated()) {
+                parameters.put("decimalType", "java.math.BigDecimal");
+                parameters.put("decimalConverter", "Decimal");
+            }
+            parameters.put(XSLPARAM_SERIAL_UID, SERIAL_UID_STR);
+            setParameters(transformer, parameters);
             for (String fieldName : fieldNames) {
                 String outputFile = outputDirectory + fieldName + ".java";
                 if (!new File(outputFile).exists() || task.isOverwrite()) { // if overwrite is set, then transform and generate the file
                     logDebug("field: " + fieldName);
-                    Map<String, String> parameters = new HashMap<>();
-                    parameters.put("fieldName", fieldName);
-                    parameters.put("fieldPackage", task.getFieldPackage());
-                    String utcTimestampPrecision = task.getUtcTimestampPrecision();
-                    if (utcTimestampPrecision != null) {
-                        String utcTimestampPrecisionParameterName = "utcTimestampPrecision";
-                        if (!UTC_TIMESTAMP_PRECISION_ALLOWED_VALUES.contains(utcTimestampPrecision)) {
-                            throw new CodeGenerationException(new IllegalArgumentException(String.format(
-                                "Allowed values for parameter %s are %s. Supplied value: \"%s\".",
-                                utcTimestampPrecisionParameterName,
-                                String.join(", ", UTC_TIMESTAMP_PRECISION_ALLOWED_VALUES),
-                                utcTimestampPrecision
-                            )));
-                        }
-                        parameters.put(utcTimestampPrecisionParameterName, utcTimestampPrecision);
-                    }
-                    if (task.isDecimalGenerated()) {
-                        parameters.put("decimalType", "java.math.BigDecimal");
-                        parameters.put("decimalConverter", "Decimal");
-                    }
-                    parameters.put(XSLPARAM_SERIAL_UID, SERIAL_UID_STR);
-                    generateCodeFile(task, document, parameters, outputFile, transformer);
+                    generateCodeFile(task, document, Collections.singletonMap("fieldName", fieldName),
+                            outputFile, transformer);
                 }
             }
         } catch (Exception e) {
@@ -176,19 +181,19 @@ public class MessageCodeGenerator {
         String outputDirectory = task.getOutputBaseDirectory() + "/" + task.getMessageDirectory()
                 + "/";
         writePackageDocumentation(outputDirectory, "Message classes");
-        Document document = getSpecification(task);
-        List<String> messageNames = getNames(document.getDocumentElement(), "messages/message");
+        List<String> messageNames = getNames(getSpecification(task).getDocumentElement(), "messages/message");
+        NodeInfo document = getSpecificationTree(task);
         Transformer transformer = createTransformer(task, "MessageSubclass.xsl");
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put(XSLPARAM_SERIAL_UID, SERIAL_UID_STR);
+        parameters.put("orderedFields", Boolean.toString(task.isOrderedFields()));
+        parameters.put("fieldPackage", task.getFieldPackage());
+        parameters.put("messagePackage", task.getMessagePackage());
+        setParameters(transformer, parameters);
         for (String messageName : messageNames) {
             logDebug("generating message class: " + messageName);
-            Map<String, String> parameters = new HashMap<>();
-            parameters.put("itemName", messageName);
-            parameters.put(XSLPARAM_SERIAL_UID, SERIAL_UID_STR);
-            parameters.put("orderedFields", Boolean.toString(task.isOrderedFields()));
-            parameters.put("fieldPackage", task.getFieldPackage());
-            parameters.put("messagePackage", task.getMessagePackage());
-            generateCodeFile(task, document, parameters, outputDirectory + messageName + ".java",
-                    transformer);
+            generateCodeFile(task, document, Collections.singletonMap("itemName", messageName),
+                    outputDirectory + messageName + ".java", transformer);
         }
     }
 
@@ -198,43 +203,72 @@ public class MessageCodeGenerator {
         logInfo(task.getName() + ": generating component classes");
         String outputDirectory = task.getOutputBaseDirectory() + "/" + task.getMessageDirectory()
                 + "/component/";
-        Document document = getSpecification(task);
-        List<String> componentNames = getNames(document.getDocumentElement(),
+        List<String> componentNames = getNames(getSpecification(task).getDocumentElement(),
                 "components/component");
         if (componentNames.size() > 0) {
             writePackageDocumentation(outputDirectory, "Message component classes");
         }
+        NodeInfo document = getSpecificationTree(task);
         Transformer transformer = createTransformer(task, "MessageSubclass.xsl");
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("baseClass", "quickfix.MessageComponent");
+        parameters.put("subpackage", ".component");
+        parameters.put("fieldPackage", task.getFieldPackage());
+        parameters.put("messagePackage", task.getMessagePackage());
+        parameters.put("orderedFields", Boolean.toString(task.isOrderedFields()));
+        parameters.put(XSLPARAM_SERIAL_UID, SERIAL_UID_STR);
+        setParameters(transformer, parameters);
         for (String componentName : componentNames) {
             logDebug("generating component class: " + componentName);
-            Map<String, String> parameters = new HashMap<>();
-            parameters.put("itemName", componentName);
-            parameters.put("baseClass", "quickfix.MessageComponent");
-            parameters.put("subpackage", ".component");
-            parameters.put("fieldPackage", task.getFieldPackage());
-            parameters.put("messagePackage", task.getMessagePackage());
-            parameters.put("orderedFields", Boolean.toString(task.isOrderedFields()));
-            parameters.put(XSLPARAM_SERIAL_UID, SERIAL_UID_STR);
-            generateCodeFile(task, document, parameters, outputDirectory + componentName + ".java",
-                    transformer);
+            generateCodeFile(task, document, Collections.singletonMap("itemName", componentName),
+                    outputDirectory + componentName + ".java", transformer);
         }
     }
+
+    // A single factory is used so that compiled stylesheets and the specification trees share
+    // the same Saxon configuration (and name pool).
+    private final TransformerFactoryImpl transformerFactory = new TransformerFactoryImpl();
+
+    // Compiled stylesheets are reused for all files and all tasks using the same stylesheet.
+    private final Map<String, Templates> templatesCache = new HashMap<>();
 
     private Transformer createTransformer(Task task, String xsltFile)
             throws TransformerFactoryConfigurationError, TransformerConfigurationException {
-        StreamSource styleSource;
         File xslt = new File(task.getTransformDirectory() + "/" + xsltFile);
-        if (xslt.exists()) {
-            styleSource = new StreamSource(xslt);
-        } else {
-            logInfo("Loading predefined xslt file:" + xsltFile);
-            styleSource = new StreamSource(this.getClass().getResourceAsStream(xsltFile));
+        String cacheKey = xslt.exists() ? xslt.getAbsolutePath() : "predefined:" + xsltFile;
+        Templates templates = templatesCache.get(cacheKey);
+        if (templates == null) {
+            StreamSource styleSource;
+            if (xslt.exists()) {
+                styleSource = new StreamSource(xslt);
+            } else {
+                logInfo("Loading predefined xslt file:" + xsltFile);
+                styleSource = new StreamSource(this.getClass().getResourceAsStream(xsltFile));
+            }
+            templates = transformerFactory.newTemplates(styleSource);
+            templatesCache.put(cacheKey, templates);
         }
-        TransformerFactory transformerFactory = new net.sf.saxon.TransformerFactoryImpl();
-        return transformerFactory.newTransformer(styleSource);
+        return templates.newTransformer();
     }
 
     private final Map<String, Document> specificationCache = new HashMap<>();
+
+    private final Map<String, NodeInfo> specificationTreeCache = new HashMap<>();
+
+    /*
+     * Returns the specification as a Saxon tree. Transforming a DOM would make Saxon wrap or copy
+     * the DOM for every single generated file, so the DOM is converted only once per task.
+     */
+    private NodeInfo getSpecificationTree(Task task) throws ParserConfigurationException,
+            SAXException, IOException, XPathException {
+        NodeInfo tree = specificationTreeCache.get(task.getName());
+        if (tree == null) {
+            tree = transformerFactory.getConfiguration()
+                    .buildDocumentTree(new DOMSource(getSpecification(task))).getRootNode();
+            specificationTreeCache.put(task.getName(), tree);
+        }
+        return tree;
+    }
 
     private Document getSpecification(Task task) throws ParserConfigurationException, SAXException,
             IOException {
@@ -286,15 +320,19 @@ public class MessageCodeGenerator {
         return names;
     }
 
-    private void generateCodeFile(Task task, Document document, Map<String, String> parameters,
-            String outputFileName, Transformer transformer)
-            throws TransformerFactoryConfigurationError,
-            FileNotFoundException, TransformerException {
+    private void setParameters(Transformer transformer, Map<String, String> parameters) {
         if (parameters != null) {
             for (Map.Entry<String, String> entry : parameters.entrySet()) {
                 transformer.setParameter(entry.getKey(), entry.getValue());
             }
         }
+    }
+
+    private void generateCodeFile(Task task, NodeInfo document, Map<String, String> parameters,
+            String outputFileName, Transformer transformer)
+            throws TransformerFactoryConfigurationError,
+            FileNotFoundException, TransformerException {
+        setParameters(transformer, parameters);
 
         File outputFile = new File(outputFileName);
         if (!outputFile.getParentFile().exists()) {
@@ -307,12 +345,11 @@ public class MessageCodeGenerator {
             }
         }
 
-        DOMSource source = new DOMSource(document);
         FileOutputStream fos = new FileOutputStream(outputFile);
         BufferedOutputStream bos = new BufferedOutputStream(fos);
         try {
             StreamResult result = new StreamResult(bos);
-            transformer.transform(source, result);
+            transformer.transform(document, result);
         } finally {
             try {
                 bos.close();

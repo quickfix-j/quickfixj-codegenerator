@@ -1,5 +1,7 @@
 # QuickFIX/J Code Generator Maven Plugin
 
+[![Maven Central](https://img.shields.io/maven-central/v/org.quickfixj/quickfixj-codegenerator?label=Maven%20Central)](https://central.sonatype.com/artifact/org.quickfixj/quickfixj-codegenerator)
+
 A Maven plugin that generates Java source files for FIX (Financial Information eXchange) messages from QuickFIX XML dictionaries.
 
 ## Overview

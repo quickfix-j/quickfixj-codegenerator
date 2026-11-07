@@ -26,7 +26,8 @@
 
 <xsl:template match="text()"/>
 
-<xsl:template match="/">/* Generated Java Source File */
+<xsl:template match="/">
+<xsl:variable name="generatedSource">/* Generated Java Source File */
 /*******************************************************************************
  * Copyright (c) quickfixengine.org  All rights reserved.
  *
@@ -63,6 +64,8 @@ public class MessageFactory implements quickfix.MessageFactory {
 		return null;
 	}
 }
+</xsl:variable>
+<xsl:value-of select="replace(string($generatedSource), '[ \t]+(\r?\n|$)', '$1')"/>
 </xsl:template>
 
 <xsl:template name="switch-statement">
@@ -107,9 +110,12 @@ public class MessageFactory implements quickfix.MessageFactory {
 <xsl:template mode="group-factories" match="component">
 	<xsl:param name="fullPath"/>
 	<xsl:variable name="name" select="@name"/>
-	<xsl:apply-templates mode="group-factories" select="key('components-by-name', $name)/group">
-		<xsl:with-param name="fullPath" select='$fullPath'/>
+	<xsl:apply-templates
+		mode="group-factories"
+		select="key('components-by-name', $name)/*[self::group or self::component]">
+		<xsl:with-param name="fullPath" select="$fullPath"/>
 	</xsl:apply-templates>
 </xsl:template>
+
 
 </xsl:stylesheet>

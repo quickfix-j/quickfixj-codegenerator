@@ -17,7 +17,6 @@ public class MessageFactoryNestedComponentTest {
     @Test
     public void generatesFactoryForNestedComponentGroup() throws Exception {
 
-        // 1. 코드 생성 작업 설정
         MessageCodeGenerator.Task task = new MessageCodeGenerator.Task();
 
         task.setName("NestedComponentTest");
@@ -37,10 +36,8 @@ public class MessageFactoryNestedComponentTest {
         task.setOrderedFields(true);
         task.setDecimalGenerated(false);
 
-        // 2. FIX Dictionary -> Java 소스 생성
         new MessageCodeGenerator().generate(task);
 
-        // 3. 생성된 MessageFactory.java 읽기
         File factoryFile = new File(
             outputDir, "quickfix/test/MessageFactory.java"
         );
@@ -50,7 +47,6 @@ public class MessageFactoryNestedComponentTest {
             StandardCharsets.UTF_8
         );
 
-        // 4. 기존에 생성되던 바깥쪽 그룹 확인
         assertTrue(
             factory.contains(
                 "return new quickfix.test."
@@ -59,7 +55,6 @@ public class MessageFactoryNestedComponentTest {
             "Outer group should be generated"
         );
 
-        // 5. 이슈 #822: 안쪽 그룹 생성 분기 확인
         assertTrue(
             factory.contains(
                 "case quickfix.field.NoUnderlyingSecurityAltID.FIELD:"
@@ -67,7 +62,6 @@ public class MessageFactoryNestedComponentTest {
             "Group 457 factory case is missing"
         );
 
-        // 6. 올바른 중첩 Java 클래스 생성 확인
         assertTrue(
             factory.contains(
                 "return new quickfix.test.TradeCaptureReport."
